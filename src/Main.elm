@@ -1,24 +1,31 @@
-module Main exposing (..)
+module Main exposing (main)
 
-import Browser
-import Random
-import Color
+import Angle exposing (Angle)
 import Arc2d exposing (Arc2d)
-import Point2d exposing (Point2d)
+import Browser
+import Color
 import Geometry.Svg as Svg
-import TypedSvg.Attributes exposing (..)
-import TypedSvg.Types exposing (..)
 import Html exposing (Html)
 import Html.Attributes exposing (src)
-import TypedSvg exposing (svg, g)
-import TypedSvg.Core exposing (Svg, Attribute)
+import Pixels exposing (Pixels)
+import Point2d exposing (Point2d)
+import Random
+import TypedSvg exposing (g, svg)
+import TypedSvg.Attributes exposing (..)
+import TypedSvg.Core exposing (Attribute, Svg)
+import TypedSvg.Types exposing (..)
+
 
 
 --- MODEL ----
 
 
+type TopLeftCoordinates
+    = TopLeftCoordinates
+
+
 type alias Model =
-    List Arc2d
+    List (Arc2d Pixels TopLeftCoordinates)
 
 
 init : ( Model, Cmd Msg )
@@ -31,7 +38,7 @@ init =
 
 
 type Msg
-    = NewArcs (List Arc2d)
+    = NewArcs Model
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -47,31 +54,31 @@ update msg model =
 
 pair : Random.Generator ( Float, Float )
 pair =
-    Random.pair (Random.float 0 500) (Random.float 0 500)
+    Random.pair (Random.float 200 800) (Random.float 100 700)
 
 
-point : Random.Generator Point2d
+point : Random.Generator (Point2d Pixels TopLeftCoordinates)
 point =
-    Random.map Point2d.fromCoordinates pair
+    Random.map (Point2d.fromTuple Pixels.pixels) pair
 
 
-angle : Random.Generator Float
+angle : Random.Generator Angle
 angle =
-    Random.float 30 120
+    Random.map
+        Angle.degrees
+        (Random.float 30 120)
 
 
-arc : Random.Generator Arc2d
+arc : Random.Generator (Arc2d Pixels TopLeftCoordinates)
 arc =
     Random.map3
-        (\point1 point2 angle1 ->
-            Arc2d.from point1 point2 (degrees angle1)
-        )
+        Arc2d.from
         point
         point
         angle
 
 
-arcs : Random.Generator (List Arc2d)
+arcs : Random.Generator Model
 arcs =
     Random.list 100 arc
 
@@ -87,8 +94,8 @@ newArcs =
 
 rootAttributes : List (Attribute msg)
 rootAttributes =
-    [ height <| px 500
-    , width <| percent 100
+    [ height <| px 1000
+    , width <| px 1000
     ]
 
 
