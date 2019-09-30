@@ -6,13 +6,13 @@ import Browser
 import Color
 import Geometry.Svg as Svg
 import Html exposing (Html)
-import Html.Attributes exposing (src)
 import Pixels exposing (Pixels)
 import Point2d exposing (Point2d)
 import Random
+import Time
 import TypedSvg exposing (g, svg)
 import TypedSvg.Attributes exposing (..)
-import TypedSvg.Core exposing (Attribute, Svg)
+import TypedSvg.Core exposing (Attribute)
 import TypedSvg.Types exposing (..)
 
 
@@ -39,6 +39,7 @@ init =
 
 type Msg
     = NewArcs Model
+    | Tick Time.Posix
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -46,6 +47,9 @@ update msg model =
     case msg of
         NewArcs list ->
             ( list, Cmd.none )
+
+        Tick _ ->
+            ( model, newArcs )
 
 
 
@@ -66,7 +70,7 @@ angle : Random.Generator Angle
 angle =
     Random.map
         Angle.degrees
-        (Random.float 30 120)
+        (Random.float 30 90)
 
 
 arc : Random.Generator (Arc2d Pixels TopLeftCoordinates)
@@ -80,7 +84,7 @@ arc =
 
 arcs : Random.Generator Model
 arcs =
-    Random.list 100 arc
+    Random.list 50 arc
 
 
 newArcs : Cmd Msg
@@ -117,6 +121,15 @@ view model =
 
 
 
+---- SUBSCRIPTIONS ----
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Time.every 100 Tick
+
+
+
 ---- PROGRAM ----
 
 
@@ -126,5 +139,5 @@ main =
         { view = view
         , init = \_ -> init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
